@@ -14,6 +14,86 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* below this width the app already fills the screen edge-to-edge like a
+   real phone, so the shell only needs to kick in on wider desktop viewports.
+   phone-notch / phone-home-indicator are decorative-only and stay hidden
+   until then. */
+.phone-notch,
+.phone-home-indicator {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  body {
+    display: flex;
+    justify-content: center;
+    /* padding (not align-items:center + min-height:100dvh) guarantees a
+       visible top margin even on short windows — centering with a fixed
+       min-height clips the overflow instead of leaving it scrollable */
+    padding: 40px 0;
+    background-color: #e7e8ec;
+  }
+
+  .phone-shell {
+    position: relative;
+    width: 375px;
+    height: 667px;
+    padding: 14px 12px;
+    border-radius: 52px;
+    background: linear-gradient(160deg, #3a3a40, #101012);
+    box-shadow:
+      0 40px 80px -24px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(255, 255, 255, 0.06) inset;
+  }
+
+  .phone-frame {
+    position: relative;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 34px;
+    background-color: #0e0e11;
+    scrollbar-width: none;
+  }
+
+  .phone-frame::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* the pages themselves use min-h-dvh, which measures the real browser
+     viewport, not this fixed-height frame — inside the shell we want them
+     to just fill the frame instead */
+  .phone-frame > div {
+    min-height: 100%;
+  }
+
+  .phone-notch {
+    display: block;
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    z-index: 10;
+    width: 110px;
+    height: 26px;
+    transform: translateX(-50%);
+    border-radius: 14px;
+    background: #101012;
+  }
+
+  .phone-home-indicator {
+    display: block;
+    position: absolute;
+    bottom: 9px;
+    left: 50%;
+    z-index: 10;
+    width: 120px;
+    height: 4px;
+    transform: translateX(-50%);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.55);
+  }
+}
+
 /* train badges animate purely on the compositor thread (GPU), independent
    of the JS main thread, so clicks/re-renders elsewhere can never stall
    their motion the way a per-frame JS position update could */

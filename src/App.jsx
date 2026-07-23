@@ -5,10 +5,16 @@ import { Measure } from "./pages/Measure.jsx";
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LineView />} />
-        <Route path="/measure" element={<Measure />} />
-      </Routes>
+      <div className="phone-shell">
+        <div className="phone-notch" />
+        <div className="phone-frame">
+          <Routes>
+            <Route path="/" element={<LineView />} />
+            <Route path="/measure" element={<Measure />} />
+          </Routes>
+        </div>
+        <div className="phone-home-indicator" />
+      </div>
     </BrowserRouter>
   );
 }

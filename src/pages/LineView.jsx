@@ -11,7 +11,7 @@ function formatTime(date) {
 
 export function LineView() {
   const trains = useTrains();
-  const { nearestStationId, source } = useNearestStation();
+  const { source } = useNearestStation();
   const [selectedTrainId, setSelectedTrainId] = useState(null);
   const [now, setNow] = useState(() => new Date());
 
@@ -53,8 +53,6 @@ export function LineView() {
         trains={trains}
         selectedTrainId={selectedTrainId}
         onSelectTrain={handleSelectTrain}
-        nearestStationId={nearestStationId}
-        showNearestPin={source === "geo"}
       />
 
       <TrainSheet train={selectedTrain} onClose={() => setSelectedTrainId(null)} />

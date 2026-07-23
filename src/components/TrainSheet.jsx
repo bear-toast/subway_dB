@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { Headphones, Mic, TrendingDown, TrendingUp } from "lucide-react";
+import { Headphones, Mic, Train as TrainIcon, TrendingDown, TrendingUp } from "lucide-react";
 import { STATIONS, dbColor, dbStatus, recommendedVolume } from "../data/line2.js";
+import { NUM_SEGMENTS } from "../hooks/useTrains.js";
 import { Highlighted } from "./Highlighted.jsx";
 
 const BADGE_STYLE = {
@@ -9,7 +10,10 @@ const BADGE_STYLE = {
   "#E24B4A": { background: "#fdeaea", border: "#E24B4A", text: "#7A1414" },
 };
 
-function predictionMessage(destName, currentDb, predictedDb) {
+// the last segment has no "next segment" to predict — SEGMENT_DB just
+// clamps to itself there, so show arrival instead of a fake trend
+function predictionMessage(destName, isFinalSegment, currentDb, predictedDb) {
+  if (isFinalSegment) return `곧 ${destName} 도착`;
   const diff = predictedDb - currentDb;
   if (diff <= -3) return `${destName}부터 소음 감소 구간 · 약 ${Math.abs(Math.round(diff))}dB 하락 예상`;
   if (diff >= 3) return `${destName}부터 소음 증가 구간 · 약 ${Math.round(diff)}dB 상승 예상`;
@@ -25,9 +29,10 @@ export function TrainSheet({ train, onClose }) {
   const color = dbColor(train.currentDb);
   const badge = BADGE_STYLE[color];
   const roundedDb = Math.round(train.currentDb);
+  const isFinalSegment = train.segmentIndex === NUM_SEGMENTS - 1;
   const diff = train.predictedDb - train.currentDb;
-  const TrendIcon = diff <= -3 ? TrendingDown : diff >= 3 ? TrendingUp : TrendingDown;
-  const trendColor = diff <= -3 ? "#7ED08B" : diff >= 3 ? "#E88A8A" : "#8b8b93";
+  const TrendIcon = isFinalSegment ? TrainIcon : diff <= -3 ? TrendingDown : diff >= 3 ? TrendingUp : TrendingDown;
+  const trendColor = isFinalSegment ? "#8b8b93" : diff <= -3 ? "#7ED08B" : diff >= 3 ? "#E88A8A" : "#8b8b93";
 
   return (
     <div className="mt-4 rounded-2xl bg-[#1c1c20] px-5 pb-5 pt-2">
@@ -58,7 +63,9 @@ export function TrainSheet({ train, onClose }) {
       <div className="mt-4 border-t border-white/10 pt-4">
         <div className="flex items-center gap-3 text-sm text-gray-200">
           <TrendIcon size={16} style={{ color: trendColor }} className="shrink-0" />
-          <Highlighted text={predictionMessage(toStation.name, train.currentDb, train.predictedDb)} />
+          <Highlighted
+            text={predictionMessage(toStation.name, isFinalSegment, train.currentDb, train.predictedDb)}
+          />
         </div>
         <div className="mt-3 flex items-center gap-3 text-sm text-gray-200">
           <Headphones size={16} className="shrink-0 text-gray-400" />

@@ -31,7 +31,7 @@ function useAnimationDelays() {
   };
 }
 
-export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStationId, showNearestPin }) {
+export function LineStrip({ trains, selectedTrainId, onSelectTrain }) {
   const getAnimationDelay = useAnimationDelays();
 
   return (
@@ -53,25 +53,16 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
           );
         })}
 
-        {/* station dots. The "내 위치" pin only anchors here while no train
-            is selected — once a train is picked it rides along with that
-            train instead (see below). */}
+        {/* station dots. The "내 위치" pin never anchors to a station by
+            itself — it only ever rides on the selected train (see below),
+            so it can't get stuck floating over Gangnam before geolocation
+            resolves or after a train disappears. */}
         {STATIONS.map((station, i) => (
           <div
             key={station.id}
-            className="absolute top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+            className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-gray-400 bg-[#232228]"
             style={{ left: `${stationPercent(i)}%` }}
-          >
-            <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-400 bg-[#232228]" />
-            {!selectedTrainId && showNearestPin && nearestStationId === station.id && (
-              <MapPin
-                size={16}
-                className="absolute -top-6 text-sky-400"
-                strokeWidth={2.5}
-                fill="#232228"
-              />
-            )}
-          </div>
+          />
         ))}
 
         {/* trains: badge floats above the track, connected by a short stem */}
