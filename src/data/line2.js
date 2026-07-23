@@ -26,7 +26,7 @@ export function dbStatus(db) {
 }
 
 export function recommendedVolume(db) {
-  if (db < 75) return "볼륨 70% 이하 권장";
-  if (db < 80) return "볼륨 60% 이하 권장";
-  return "볼륨 55% 이하 · 가능하면 노이즈캔슬링 사용";
+  if (db < 75) return "지금 구간 권장 볼륨 70% 이하";
+  if (db < 80) return "지금 구간 권장 볼륨 60% 이하";
+  return "지금 구간 권장 볼륨 55% 이하 · 가능하면 노이즈캔슬링 사용";
 }

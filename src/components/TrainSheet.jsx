@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { X } from "lucide-react";
+import { Headphones, Mic, TrendingDown, TrendingUp } from "lucide-react";
 import { STATIONS, dbColor, dbStatus, recommendedVolume } from "../data/line2.js";
+import { Highlighted } from "./Highlighted.jsx";
 
-const BADGE_TEXT_COLOR = {
-  "#97C459": "#2F5A1E",
-  "#FAC775": "#7A4A00",
-  "#E24B4A": "#7A1414",
+const BADGE_STYLE = {
+  "#97C459": { background: "#eaf5df", border: "#97C459", text: "#2F5A1E" },
+  "#FAC775": { background: "#fdf1de", border: "#FAC775", text: "#7A4A00" },
+  "#E24B4A": { background: "#fdeaea", border: "#E24B4A", text: "#7A1414" },
 };
 
 function predictionMessage(destName, currentDb, predictedDb) {
@@ -19,54 +20,59 @@ export function TrainSheet({ train, onClose }) {
   const navigate = useNavigate();
   if (!train) return null;
 
-  const fromStation = STATIONS[train.direction === 1 ? train.segmentIndex : train.segmentIndex + 1];
-  const toStation = STATIONS[train.direction === 1 ? train.segmentIndex + 1 : train.segmentIndex];
+  const fromStation = STATIONS[train.segmentIndex];
+  const toStation = STATIONS[train.segmentIndex + 1];
   const color = dbColor(train.currentDb);
+  const badge = BADGE_STYLE[color];
   const roundedDb = Math.round(train.currentDb);
+  const diff = train.predictedDb - train.currentDb;
+  const TrendIcon = diff <= -3 ? TrendingDown : diff >= 3 ? TrendingUp : TrendingDown;
+  const trendColor = diff <= -3 ? "#7ED08B" : diff >= 3 ? "#E88A8A" : "#8b8b93";
 
   return (
-    <div
-      className="fixed inset-x-0 bottom-0 z-20 rounded-t-2xl bg-white px-5 pt-4 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]"
-      style={{ paddingBottom: "calc(1.25rem + env(safe-area-inset-bottom))" }}
-    >
-      <div className="mb-2 flex items-start justify-between">
+    <div className="mt-4 rounded-2xl bg-[#1c1c20] px-5 pb-5 pt-2">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="닫기"
+        className="mx-auto mb-3 block h-1 w-10 rounded-full bg-gray-600"
+      />
+
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm text-gray-500">
-            {fromStation.name} → {toStation.name}
+          <p className="text-sm text-gray-400">
+            선택한 열차 · {fromStation.name} → {toStation.name}
           </p>
-          <div className="mt-0.5 flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-gray-900">{roundedDb}dB</span>
-            <span
-              className="rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: `${color}33`, color: BADGE_TEXT_COLOR[color] }}
-            >
-              {dbStatus(train.currentDb)}
-            </span>
-          </div>
+          <p className="mt-1 text-4xl font-bold" style={{ color }}>
+            {roundedDb} <span className="text-2xl">dB</span>
+          </p>
+        </div>
+        <span
+          className="mt-1 shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold"
+          style={{ backgroundColor: badge.background, borderColor: badge.border, color: badge.text }}
+        >
+          {dbStatus(train.currentDb)}
+        </span>
+      </div>
+
+      <div className="mt-4 border-t border-white/10 pt-4">
+        <div className="flex items-center gap-3 text-sm text-gray-200">
+          <TrendIcon size={16} style={{ color: trendColor }} className="shrink-0" />
+          <Highlighted text={predictionMessage(toStation.name, train.currentDb, train.predictedDb)} />
+        </div>
+        <div className="mt-3 flex items-center gap-3 text-sm text-gray-200">
+          <Headphones size={16} className="shrink-0 text-gray-400" />
+          <Highlighted text={recommendedVolume(train.currentDb)} />
         </div>
         <button
           type="button"
-          onClick={onClose}
-          aria-label="닫기"
-          className="rounded-full p-1 text-gray-400 hover:bg-gray-100"
+          onClick={() => navigate("/measure")}
+          className="mt-3 flex items-center gap-3 text-sm text-gray-200"
         >
-          <X size={20} />
+          <Mic size={16} className="shrink-0 text-gray-400" />
+          <span>내 측정값으로 이 열차 데이터 보정하기</span>
         </button>
       </div>
-
-      <p className="rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-600">
-        {predictionMessage(toStation.name, train.currentDb, train.predictedDb)}
-      </p>
-
-      <p className="mt-3 text-sm font-medium text-gray-700">{recommendedVolume(train.currentDb)}</p>
-
-      <button
-        type="button"
-        onClick={() => navigate("/measure")}
-        className="mt-4 mb-1 w-full rounded-xl bg-gray-900 py-3 text-sm font-semibold text-white active:bg-gray-800"
-      >
-        내 측정값으로 보정하기
-      </button>
     </div>
   );
 }

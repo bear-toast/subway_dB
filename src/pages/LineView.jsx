@@ -6,7 +6,7 @@ import { useNearestStation } from "../hooks/useNearestStation.js";
 import { LINE_NAME, DIRECTION_LABEL } from "../data/line2.js";
 
 function formatTime(date) {
-  return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  return `${date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 기준`;
 }
 
 export function LineView() {
@@ -27,37 +27,28 @@ export function LineView() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-gray-50 pb-8">
-      <header className="bg-white px-5 pt-6 pb-3 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900">
+    <div className="min-h-dvh bg-[#0e0e11] px-4 pb-10 pt-6">
+      <header className="mb-4 px-1">
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-lg font-bold text-white">
             {LINE_NAME} · {DIRECTION_LABEL}
           </h1>
-          <span className="text-sm text-gray-500">{formatTime(now)}</span>
+          <span className="text-xs text-gray-400">{formatTime(now)}</span>
         </div>
+        <p className="mt-1 text-sm text-gray-400">열차를 탭하면 소음 정보를 볼 수 있어요</p>
         {source === "fallback" && (
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-gray-500">
             위치 정보를 사용할 수 없어 강남역 기준으로 표시합니다
           </p>
         )}
       </header>
 
-      <main className="flex-1">
-        <div className="bg-white pb-2">
-          <LineStrip
-            trains={trains}
-            selectedTrainId={selectedTrainId}
-            onSelectTrain={handleSelectTrain}
-            nearestStationId={nearestStationId}
-          />
-        </div>
-
-        {!selectedTrain && (
-          <p className="px-5 pt-6 text-center text-sm text-gray-400">
-            열차를 탭하면 현재 소음과 예측 정보를 볼 수 있어요
-          </p>
-        )}
-      </main>
+      <LineStrip
+        trains={trains}
+        selectedTrainId={selectedTrainId}
+        onSelectTrain={handleSelectTrain}
+        nearestStationId={nearestStationId}
+      />
 
       <TrainSheet train={selectedTrain} onClose={() => setSelectedTrainId(null)} />
     </div>
