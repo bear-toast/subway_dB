@@ -140,8 +140,8 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
       {/* legend */}
       <div className="mt-5 flex items-center gap-4 text-[11px] text-gray-400">
         <LegendItem color="#97C459" label="-75dB" />
-        <LegendItem color="#FAC775" label="75-80" />
-        <LegendItem color="#E24B4A" label="80dB+" />
+        <LegendItem color="#FAC775" label="75-85" />
+        <LegendItem color="#E24B4A" label="85dB+" />
       </div>
     </div>
   );
