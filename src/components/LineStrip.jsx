@@ -29,7 +29,7 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
 
   return (
     <div className="rounded-2xl bg-[#232228] p-4">
-      <div className="relative h-16 mt-8">
+      <div className="relative h-16 mt-11">
         {/* base track */}
         <div className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 rounded-full bg-white/10" />
 
@@ -46,7 +46,9 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
           );
         })}
 
-        {/* station dots */}
+        {/* station dots. The "내 위치" pin only anchors here while no train
+            is selected — once a train is picked it rides along with that
+            train instead (see below). */}
         {STATIONS.map((station, i) => (
           <div
             key={station.id}
@@ -54,7 +56,7 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
             style={{ left: `${stationPercent(i)}%` }}
           >
             <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-400 bg-[#232228]" />
-            {nearestStationId === station.id && (
+            {!selectedTrainId && nearestStationId === station.id && (
               <MapPin
                 size={16}
                 className="absolute -top-6 text-sky-400"
@@ -85,7 +87,15 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
                 animationDelay: `${getAnimationDelay(train)}ms`,
               }}
             >
-              <div className="flex flex-col items-center">
+              <div className="relative flex flex-col items-center">
+                {isSelected && (
+                  <MapPin
+                    size={16}
+                    className="absolute -top-6 text-sky-400"
+                    strokeWidth={2.5}
+                    fill="#232228"
+                  />
+                )}
                 <div
                   className={`flex h-9 w-9 items-center justify-center rounded-full shadow-lg ring-4 ${
                     isSelected ? "ring-sky-500" : "ring-[#232228]"
@@ -104,11 +114,11 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
       {/* station labels: each label's box exactly matches its station's
           slot width so long names (e.g. 양재시민의숲) wrap instead of
           bleeding into a neighboring label */}
-      <div className="relative mt-1 h-9">
+      <div className="relative mt-1 h-8">
         {STATIONS.map((station, i) => (
           <div
             key={station.id}
-            className="absolute top-0 -translate-x-1/2 text-center text-[10px] leading-tight text-gray-400"
+            className="absolute top-0 -translate-x-1/2 text-center text-[9px] leading-tight text-gray-400"
             style={{ left: `${stationPercent(i)}%`, width: `${100 / (NUM_STATIONS - 1)}%` }}
           >
             {station.name}

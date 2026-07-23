@@ -22,6 +22,14 @@ export function LineView() {
 
   const selectedTrain = trains.find((t) => t.id === selectedTrainId) ?? null;
 
+  // if the selected train reaches the terminus and disappears for its
+  // respawn gap, drop the selection (and its "내 위치" pin) with it instead
+  // of leaving a stale id that would silently reattach to whatever train
+  // takes that slot next
+  useEffect(() => {
+    if (selectedTrainId && !selectedTrain) setSelectedTrainId(null);
+  }, [selectedTrainId, selectedTrain]);
+
   function handleSelectTrain(id) {
     setSelectedTrainId((prev) => (prev === id ? null : id));
   }
