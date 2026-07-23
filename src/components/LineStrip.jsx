@@ -4,6 +4,13 @@ import { STATIONS, SEGMENT_DB, dbColor } from "../data/line2.js";
 
 const NUM_STATIONS = STATIONS.length;
 
+// manual line breaks for station names that would otherwise wrap at an
+// awkward mid-syllable point inside their narrow slot
+const LABEL_LINES = {
+  cheonggyesan: ["청계산", "입구"],
+  yangjaecitizen: ["양재", "시민의숲"],
+};
+
 function stationPercent(index) {
   return (index / (NUM_STATIONS - 1)) * 100;
 }
@@ -24,7 +31,7 @@ function useAnimationDelays() {
   };
 }
 
-export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStationId }) {
+export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStationId, showNearestPin }) {
   const getAnimationDelay = useAnimationDelays();
 
   return (
@@ -56,7 +63,7 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
             style={{ left: `${stationPercent(i)}%` }}
           >
             <div className="h-3.5 w-3.5 rounded-full border-2 border-gray-400 bg-[#232228]" />
-            {!selectedTrainId && nearestStationId === station.id && (
+            {!selectedTrainId && showNearestPin && nearestStationId === station.id && (
               <MapPin
                 size={16}
                 className="absolute -top-6 text-sky-400"
@@ -114,14 +121,18 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
       {/* station labels: each label's box exactly matches its station's
           slot width so long names (e.g. 양재시민의숲) wrap instead of
           bleeding into a neighboring label */}
-      <div className="relative mt-1 h-8">
+      <div className="relative mt-1 h-9">
         {STATIONS.map((station, i) => (
           <div
             key={station.id}
-            className="absolute top-0 -translate-x-1/2 text-center text-[9px] leading-tight text-gray-400"
+            className="absolute top-0 -translate-x-1/2 text-center text-[10px] leading-tight text-gray-400"
             style={{ left: `${stationPercent(i)}%`, width: `${100 / (NUM_STATIONS - 1)}%` }}
           >
-            {station.name}
+            {LABEL_LINES[station.id] ? (
+              LABEL_LINES[station.id].map((line) => <div key={line}>{line}</div>)
+            ) : (
+              station.name
+            )}
           </div>
         ))}
       </div>

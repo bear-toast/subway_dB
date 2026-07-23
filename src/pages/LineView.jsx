@@ -45,9 +45,7 @@ export function LineView() {
         </div>
         <p className="mt-1 text-sm text-gray-400">열차를 탭하면 소음 정보를 볼 수 있어요</p>
         {source === "fallback" && (
-          <p className="mt-1 text-xs text-gray-500">
-            위치 정보를 사용할 수 없어 강남역 기준으로 표시합니다
-          </p>
+          <p className="mt-1 text-xs text-gray-500">위치 정보를 사용할 수 없어요</p>
         )}
       </header>
 
@@ -56,6 +54,7 @@ export function LineView() {
         selectedTrainId={selectedTrainId}
         onSelectTrain={handleSelectTrain}
         nearestStationId={nearestStationId}
+        showNearestPin={source === "geo"}
       />
 
       <TrainSheet train={selectedTrain} onClose={() => setSelectedTrainId(null)} />
