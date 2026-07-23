@@ -1,59 +1,80 @@
 import { useEffect, useRef, useState } from "react";
 import { STATIONS, SEGMENT_DB } from "../data/line2.js";
 
-const NUM_SEGMENTS = STATIONS.length - 1;
+export const NUM_SEGMENTS = STATIONS.length - 1;
 const SEGMENT_DURATION_MS = 20000;
+export const TOTAL_DURATION_MS = SEGMENT_DURATION_MS * NUM_SEGMENTS;
 
-// direction is always +1: trains only ever travel left (강남) to right (잠실),
-// looping back to the start once they reach the terminus.
-const INITIAL_TRAINS = [
-  { id: "t1", position: 0.15 },
-  { id: "t2", position: 2.6 },
-  { id: "t3", position: 4.2 },
-];
+// after a train reaches the terminus it disappears for a random gap
+// before the next one enters at the first station
+const MIN_RESPAWN_DELAY_MS = 2000;
+const MAX_RESPAWN_DELAY_MS = 7000;
 
-function deriveTrain(train) {
-  const segmentIndex = Math.min(Math.floor(train.position), NUM_SEGMENTS - 1);
-  const progress = train.position - segmentIndex;
-  // at the last segment there is no further segment to predict, so the
-  // train's own current segment stands in as the prediction
+// how often we re-check segment/lifecycle state (position itself is animated
+// by CSS, not by this timer, so this can run far less often than 60fps)
+const SCHEDULER_TICK_MS = 250;
+
+// staggered starting points, in "segments already travelled", so the three
+// trains don't all launch from 동천 at once
+const INITIAL_OFFSETS = [0.3, 3.1, 5.4];
+
+function randomRespawnDelay() {
+  return MIN_RESPAWN_DELAY_MS + Math.random() * (MAX_RESPAWN_DELAY_MS - MIN_RESPAWN_DELAY_MS);
+}
+
+function initialTrains(now) {
+  return INITIAL_OFFSETS.map((offset, i) => ({
+    id: `t${i + 1}`,
+    status: "active",
+    startTime: now - offset * SEGMENT_DURATION_MS,
+    waitUntil: null,
+  }));
+}
+
+function deriveTrain(train, now) {
+  if (train.status === "waiting") return null;
+  const elapsed = Math.min(Math.max(now - train.startTime, 0), TOTAL_DURATION_MS);
+  const positionInSegments = elapsed / SEGMENT_DURATION_MS;
+  const segmentIndex = Math.min(Math.floor(positionInSegments), NUM_SEGMENTS - 1);
   const nextSegmentIndex = Math.min(segmentIndex + 1, NUM_SEGMENTS - 1);
   return {
     id: train.id,
     segmentIndex,
-    progress,
     currentDb: SEGMENT_DB[segmentIndex],
     predictedDb: SEGMENT_DB[nextSegmentIndex],
-    percent: (train.position / NUM_SEGMENTS) * 100,
+    startTime: train.startTime,
+    durationMs: TOTAL_DURATION_MS,
   };
 }
 
 export function useTrains() {
-  const rawTrainsRef = useRef(INITIAL_TRAINS.map((t) => ({ ...t })));
-  const [trains, setTrains] = useState(() => rawTrainsRef.current.map(deriveTrain));
-  const lastTsRef = useRef(null);
-  const rafRef = useRef(null);
+  const rawRef = useRef(initialTrains(performance.now()));
+  const [trains, setTrains] = useState(() =>
+    rawRef.current.map((t) => deriveTrain(t, performance.now())).filter(Boolean)
+  );
 
   useEffect(() => {
-    function tick(ts) {
-      if (lastTsRef.current === null) lastTsRef.current = ts;
-      const dt = ts - lastTsRef.current;
-      lastTsRef.current = ts;
+    const intervalId = setInterval(() => {
+      const now = performance.now();
 
-      rawTrainsRef.current = rawTrainsRef.current.map((train) => {
-        const position = (train.position + dt / SEGMENT_DURATION_MS) % NUM_SEGMENTS;
-        return { ...train, position };
+      rawRef.current = rawRef.current.map((train) => {
+        if (train.status === "waiting") {
+          if (now >= train.waitUntil) {
+            return { ...train, status: "active", startTime: now, waitUntil: null };
+          }
+          return train;
+        }
+        const elapsed = now - train.startTime;
+        if (elapsed >= TOTAL_DURATION_MS) {
+          return { ...train, status: "waiting", waitUntil: now + randomRespawnDelay() };
+        }
+        return train;
       });
 
-      setTrains(rawTrainsRef.current.map(deriveTrain));
-      rafRef.current = requestAnimationFrame(tick);
-    }
+      setTrains(rawRef.current.map((t) => deriveTrain(t, now)).filter(Boolean));
+    }, SCHEDULER_TICK_MS);
 
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      lastTsRef.current = null;
-    };
+    return () => clearInterval(intervalId);
   }, []);
 
   return trains;

@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { MapPin, Train as TrainIcon } from "lucide-react";
 import { STATIONS, SEGMENT_DB, dbColor } from "../data/line2.js";
 
@@ -7,7 +8,25 @@ function stationPercent(index) {
   return (index / (NUM_STATIONS - 1)) * 100;
 }
 
+// A train's CSS animation-delay must be computed once per "run" (from 첫 역
+// to 종점) and then left untouched, otherwise re-deriving it from
+// performance.now() on every 250ms state tick would fight the browser's own
+// animation clock. Caching by startTime (stable for a whole run, fresh after
+// each respawn) keeps the motion driven entirely by the compositor.
+function useAnimationDelays() {
+  const cache = useRef(new Map());
+  return (train) => {
+    const cached = cache.current.get(train.id);
+    if (cached && cached.startTime === train.startTime) return cached.delayMs;
+    const delayMs = -(performance.now() - train.startTime);
+    cache.current.set(train.id, { startTime: train.startTime, delayMs });
+    return delayMs;
+  };
+}
+
 export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStationId }) {
+  const getAnimationDelay = useAnimationDelays();
+
   return (
     <div className="rounded-2xl bg-[#232228] p-4">
       <div className="relative h-16 mt-8">
@@ -56,8 +75,15 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
               type="button"
               onClick={() => onSelectTrain(train.id)}
               aria-label={`열차 ${train.id}, ${train.currentDb}dB`}
-              className="absolute -translate-x-1/2 transition-[left] duration-100 ease-linear"
-              style={{ left: `${train.percent}%`, bottom: "calc(50% + 4px)" }}
+              className="absolute -translate-x-1/2"
+              style={{
+                bottom: "calc(50% + 4px)",
+                animationName: "train-move",
+                animationDuration: `${train.durationMs}ms`,
+                animationTimingFunction: "linear",
+                animationFillMode: "forwards",
+                animationDelay: `${getAnimationDelay(train)}ms`,
+              }}
             >
               <div className="flex flex-col items-center">
                 <div
@@ -75,13 +101,15 @@ export function LineStrip({ trains, selectedTrainId, onSelectTrain, nearestStati
         })}
       </div>
 
-      {/* station labels */}
-      <div className="relative mt-1 h-8">
+      {/* station labels: each label's box exactly matches its station's
+          slot width so long names (e.g. 양재시민의숲) wrap instead of
+          bleeding into a neighboring label */}
+      <div className="relative mt-1 h-9">
         {STATIONS.map((station, i) => (
           <div
             key={station.id}
-            className="absolute top-0 w-14 -translate-x-1/2 text-center text-[11px] leading-tight text-gray-400"
-            style={{ left: `${stationPercent(i)}%` }}
+            className="absolute top-0 -translate-x-1/2 text-center text-[10px] leading-tight text-gray-400"
+            style={{ left: `${stationPercent(i)}%`, width: `${100 / (NUM_STATIONS - 1)}%` }}
           >
             {station.name}
           </div>

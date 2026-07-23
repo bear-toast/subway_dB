@@ -1,17 +1,19 @@
-export const LINE_NAME = "2호선";
-export const DIRECTION_LABEL = "잠실 방면";
+export const LINE_NAME = "신분당선";
+export const DIRECTION_LABEL = "강남 방면";
 
 export const STATIONS = [
+  { id: "dongcheon", name: "동천", lat: 37.3419, lng: 127.1102 },
+  { id: "migeum", name: "미금", lat: 37.3396, lng: 127.1104 },
+  { id: "jeongja", name: "정자", lat: 37.3667, lng: 127.1086 },
+  { id: "pangyo", name: "판교", lat: 37.3947, lng: 127.1112 },
+  { id: "cheonggyesan", name: "청계산입구", lat: 37.4271, lng: 127.0553 },
+  { id: "yangjaecitizen", name: "양재시민의숲", lat: 37.4457, lng: 127.0377 },
+  { id: "yangjae", name: "양재", lat: 37.4843, lng: 127.0344 },
   { id: "gangnam", name: "강남", lat: 37.4979, lng: 127.0276 },
-  { id: "yeoksam", name: "역삼", lat: 37.5006, lng: 127.0364 },
-  { id: "seolleung", name: "선릉", lat: 37.5045, lng: 127.049 },
-  { id: "samseong", name: "삼성", lat: 37.5088, lng: 127.0631 },
-  { id: "sports", name: "종합운동장", lat: 37.511, lng: 127.0737 },
-  { id: "jamsil", name: "잠실", lat: 37.5133, lng: 127.1002 },
 ];
 
 // 구간 dB: index i = STATIONS[i] → STATIONS[i+1]
-export const SEGMENT_DB = [78, 84, 79, 74, 73];
+export const SEGMENT_DB = [76, 81, 79, 85, 74, 73, 78];
 
 export function dbColor(db) {
   if (db < 75) return "#97C459";
